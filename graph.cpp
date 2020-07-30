@@ -22,7 +22,7 @@ int main()
         graph->dijkstra(i, d, path);
         for (int j = 0; j < node_number; j++)
         {
-            cout << i << "µ½" << j << "Â·¾¶³¤¶ÈÎª" << d[j] << "£¬·´ÏòÂ·¾¶Îª:";
+            cout << i << "åˆ°" << j << "è·¯å¾„é•¿åº¦ä¸º" << d[j] << "ï¼Œåå‘è·¯å¾„ä¸º:";
             int n = j;
             while (n != i)
             {

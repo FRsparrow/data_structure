@@ -2,7 +2,7 @@
 
 #define MAX_NODE_NUMBER MAX_HEAP_SIZE
 
-// 用于堆优化的dijkstra
+// 鍫嗕紭鍖杁ijkstra鐨勫爢鍏冪礌绫诲瀷
 struct heap_node
 {
     int node;
@@ -169,7 +169,7 @@ void Graph::dijkstra(int s, int d[], int path[])
         d[hn.node] = hn.cost;
         computed[hn.node] = true;
         
-        // 更新长度
+        // 鏇存柊
         for (int i = 0; i < node_number; i++)
         {
             if (!computed[i])
