@@ -14,7 +14,7 @@ public:
     Heap(int heap_size, E e[]);
     ~Heap();
 
-    bool push(E e);
+    bool push(const E& e);
     bool pop(E& e);
     E& top();
     void show(void(*visit)(E e));
@@ -59,10 +59,10 @@ template<class E>
 void Heap<E>::shift_up(int pos)
 {
     E temp = elements[pos];
-    while (pos > 0 && elements[pos/2] > temp)
+    while (pos > 0 && elements[(pos-1)>>2] > temp)
     {
-        elements[pos] = elements[pos/2];
-        pos = pos >> 2;
+        elements[pos] = elements[(pos-1)>>2];
+        pos = (pos-1) >> 2;
     }
     elements[pos] = temp;
 }
@@ -99,14 +99,14 @@ void Heap<E>::shift_down(int pos, int end)
 在堆末尾添加新元素，然后对新元素进行上浮
 */
 template<class E>
-bool Heap<E>::push(E e)
+bool Heap<E>::push(const E& e)
 {
     if (heap_size >= MAX_HEAP_SIZE)
     {
         return false;
     }
-    elements[heap_size++] = e;
-    shift_up(heap_size-1);
+    elements[heap_size] = e;
+    shift_up(heap_size++);
 
     return true;
 }
