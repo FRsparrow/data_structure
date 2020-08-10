@@ -12,11 +12,13 @@ private:
 public:
     Heap();
     Heap(int heap_size, E e[]);
+    Heap(int heap_size, E e[], bool no_create);
     ~Heap();
 
     bool push(const E& e);
     bool pop(E& e);
     E& top();
+    void sort();
     void show(void(*visit)(E e));
 };
 
@@ -47,6 +49,18 @@ Heap<E>::Heap(int heap_size, E e[])
 }
 
 template<class E>
+Heap<E>::Heap(int heap_size, E e[], bool non_create)
+{
+    this->heap_size = heap_size;
+    elements = e;
+    int pos = heap_size / 2 - 1;
+    while (pos >= 0)
+    {
+        shift_down(pos--, heap_size-1);
+    }
+}
+
+template<class E>
 Heap<E>::~Heap()
 {
     delete[] elements;
@@ -68,7 +82,7 @@ void Heap<E>::shift_up(int pos)
 }
 
 /*
-pos处的结点和较小的孩子结点比较大小，若比该孩子结点小，则交换，重复步骤，否则结束
+pos处的结点和较小的孩子结点比较大小，若比该孩子结点小，则交换，重复步骤，否则结束，包含end
 */
 template<class E>
 void Heap<E>::shift_down(int pos, int end)
@@ -132,6 +146,20 @@ template<class E>
 E& Heap<E>::top()
 {
     return elements[0];
+}
+
+template<class E>
+void Heap<E>::sort()
+{
+    E temp;
+    int end = heap_size;
+    while (--end >= 1)
+    {
+        temp = elements[0];
+        elements[0] = elements[end];
+        elements[end] = temp;
+        shift_down(0, end-1);
+    }
 }
 
 template<class E>
