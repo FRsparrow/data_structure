@@ -3,10 +3,35 @@
 
 using namespace std;
 
+void visit(int nn)
+{
+    if (nn < 0)
+    {
+        cout << endl;
+    }
+    else
+    {
+        cout << nn << " ";
+    }
+}
+
 int main()
 {
-    const int node_number = 8;
-    Graph* graph = new Graph(node_number, false);
+    const int node_number = 6, edge_number = 10;
+    Graph* graph = new Graph(node_number, edge_number, true);
+
+    // 最小生成树图
+    graph->add_edge(0, 1, 6);
+    graph->add_edge(0, 2, 1);
+    graph->add_edge(0, 3, 5);
+    graph->add_edge(1, 2, 5);
+    graph->add_edge(1, 4, 3);
+    graph->add_edge(2, 3, 5);
+    graph->add_edge(2, 4, 6);
+    graph->add_edge(2, 5, 4);
+    graph->add_edge(3, 5, 2);
+    graph->add_edge(4, 5, 6);
+
     /*
     (2)——————5————————
      |               |
@@ -64,21 +89,26 @@ int main()
     // graph->add_edge(8, 6);
 
     // 关键路径图
-    graph->add_edge(0, 1, 8);
-    graph->add_edge(0, 2, 12);
-    graph->add_edge(1, 3, 14);
-    graph->add_edge(2, 3, 10);
-    graph->add_edge(2, 5, 28);
-    graph->add_edge(3, 4, 6);
-    graph->add_edge(3, 5, 8);
-    graph->add_edge(4, 6, 18);
-    graph->add_edge(5, 6, 6);
-    graph->add_edge(6, 7, 12);
+    // graph->add_edge(0, 1, 8);
+    // graph->add_edge(0, 2, 12);
+    // graph->add_edge(1, 3, 14);
+    // graph->add_edge(2, 3, 10);
+    // graph->add_edge(2, 5, 28);
+    // graph->add_edge(3, 4, 6);
+    // graph->add_edge(3, 5, 8);
+    // graph->add_edge(4, 6, 18);
+    // graph->add_edge(5, 6, 6);
+    // graph->add_edge(6, 7, 12);
+
+    // 最小生成树
+    auto mst = new Graph(node_number, node_number-1);
+    graph->kruskal(*mst);
+    mst->show(visit);
 
     // int d[node_number], path[node_number];
     // for (int i = 0; i < node_number; i++)
     // {
-    //     graph->bellman_ford(i, d, path);
+    //     graph->dijkstra(i, d, path);
     //     for (int j = 0; j < node_number; j++)
     //     {
     //         // if (d[j] >= INF)
@@ -143,16 +173,16 @@ int main()
     // cout << endl;
     
     // 关键路径
-    int cp[20];
-    for (int i = 0; i < 20; i++)
-    {
-        cp[i] = -1;
-    }
-    graph->critical_path(cp);
-    for (int i = 0; cp[i] != -1; i++)
-    {
-        cout << cp[i] << " ";
-    }
+    // int cp[20];
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     cp[i] = -1;
+    // }
+    // graph->critical_path(cp);
+    // for (int i = 0; cp[i] != -1; i++)
+    // {
+    //     cout << cp[i] << " ";
+    // }
     
 
     system("pause");

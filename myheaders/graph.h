@@ -1,7 +1,30 @@
 #include "heap.h"
+#include "disjoint_set.h"
 
 #define MAX_NODE_NUMBER MAX_HEAP_SIZE   // 最大结点数
 #define INF 100    // 无穷权值
+
+// kruskal算法存放边的堆元素类型
+struct heap_edge
+{
+    int cost;
+    int s;
+    int t;
+
+    heap_edge(){}
+    heap_edge(const heap_edge& he): cost(he.cost), s(he.s), t(he.t){}
+    heap_edge(int c, int s_, int t_): cost(c), s(s_), t(t_){}
+
+    bool operator < (struct heap_edge he)
+    {
+        return cost < he.cost;
+    }
+
+    bool operator > (struct heap_edge he)
+    {
+        return cost > he.cost;
+    }
+};
 
 // 堆优化dijkstra的堆元素类型
 struct heap_node
@@ -74,19 +97,25 @@ class Graph
 {
 private:
     int node_number;
+    int edge_number;    // 现有的边数，不是最大边数
     node* sources;  // 正邻接表
     node* targets;  // 逆邻接表,若为无向图则等于sources
+    heap_edge* edges;
 
     bool undirected;    // true为无向图，false为有向图
+    void initialize( Heap<heap_edge>* heap);
     void set_distance(int s, int d[], Heap<heap_node>* heap);
     void get_indegree(int count[], int& top);
 
 public:
 
-    Graph(int n, bool undirected);
+    Graph(int n, int en, bool undirected);
     ~Graph();
 
+    void show(void(*visit)(int nn));
     void add_edge(int s, int t, int cost);
+    void prim(Graph& mst);
+    void kruskal(Graph& mst);
     void dijkstra(int s, int d[], int path[]);
     void bellman_ford(int s, int d[], int path[]);
     void floyd(int** a, int** path);
@@ -94,6 +123,14 @@ public:
     bool topological_sort(int seq[]);   // 有环或为无向图返回false，否则返回true
     int get_cost(int s, int t);
 };
+
+void Graph::initialize (Heap<heap_edge>* heap)
+{
+    for (int i = 0; i < edge_number; i++)
+    {
+        heap->push(edges[i]);
+    }
+}
 
 void Graph::set_distance (int s, int d[], Heap<heap_node>* heap)
 {
@@ -133,7 +170,7 @@ void Graph::get_indegree(int count[], int& top)
     }
 }
 
-Graph::Graph(int n, bool type=true)
+Graph::Graph(int n, int en, bool type=true)
 {
     if (n > MAX_NODE_NUMBER)
     {
@@ -143,7 +180,9 @@ Graph::Graph(int n, bool type=true)
     {
         undirected = type;
         node_number = n;
+        edge_number = 0;
         sources = new node[n];
+        edges = new heap_edge[en];
 
         if (!type)   // 有向图建立逆邻接表
         {
@@ -160,15 +199,27 @@ Graph::Graph(int n, bool type=true)
 Graph::~Graph()
 {
     delete[] sources;
+    delete[] edges;
     if (!undirected)
     {
         delete[] targets;
     }
 }
 
+void Graph::show(void(*visit)(int nn))
+{
+    for (int i = 0; i < edge_number; i++)
+    {
+        visit(edges[i].s);
+        visit(edges[i].t);
+        visit(-1);
+    }
+}
+
 void Graph::add_edge(int s, int t, int cost=1)
 {
     sources[s].add_neighbour(t, cost);
+    edges[edge_number++] = heap_edge(cost, s, t);
     // 无向图则每条边有两个方向
     if (undirected)
     {
@@ -178,7 +229,37 @@ void Graph::add_edge(int s, int t, int cost=1)
     {
         targets[t].add_neighbour(s, cost);
     }
+}
+
+void Graph::prim(Graph& mst)
+{}
+
+void Graph::kruskal(Graph& mst)
+{
+    if (edge_number < node_number-1)
+    {
+        return;
+    }
     
+    heap_edge next_edge;
+    auto heap = new Heap<heap_edge>();
+    initialize(heap);  // 初始化堆
+    disjoint_set* nodes = new disjoint_set(node_number);    // 顶点并查集，已合并的点在一个集合内
+    int en = node_number - 1;
+    while (en)
+    {
+        heap->pop(next_edge);
+        int s_root = nodes->find(next_edge.s), t_root = nodes->find(next_edge.t);
+        if (s_root != t_root)
+        {
+            mst.add_edge(next_edge.s, next_edge.t, next_edge.cost);
+            nodes->_union(s_root, t_root);
+            en--;
+        }
+    }
+
+    delete nodes;
+    delete heap;
 }
 
 int Graph::get_cost(int s, int t)
