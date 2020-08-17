@@ -488,7 +488,7 @@ void Graph::floyd (int** a, int** path)
             {
                 if (a[i][k] < INF && a[k][j] < INF && (a[i][j] == INF || a[i][k] + a[k][j] < a[i][j]))
                 {
-                    // i = k && j != k，故a[i][j]的改变不影响本次k中其他i，j的计算，因为其若改变，是根据a[i][k]和a[k][j]计算的
+                    // i != k && j != k，故a[i][j]的改变不影响本次k中其他i，j的计算，因为其若改变，是根据a[i][k]和a[k][j]计算的
                     a[i][j] = a[i][k] + a[k][j];
                     // i到j路经k(i->...->k->...->j)，从而i到j的路上j前面的顶点就是k到j的路上j前面的顶点
                     path[i][j] = path[k][j];
