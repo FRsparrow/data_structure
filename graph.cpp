@@ -102,7 +102,7 @@ int main()
 
     // 最小生成树
     auto mst = new Graph(node_number, node_number-1);
-    graph->kruskal(*mst);
+    graph->prim(*mst);
     mst->show(visit);
 
     // int d[node_number], path[node_number];

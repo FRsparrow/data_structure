@@ -96,14 +96,16 @@ void node::add_neighbour(int t, int cost)
 class Graph
 {
 private:
+    bool undirected;    // true为无向图，false为有向图
     int node_number;
     int edge_number;    // 现有的边数，不是最大边数
     node* sources;  // 正邻接表
     node* targets;  // 逆邻接表,若为无向图则等于sources
     heap_edge* edges;
 
-    bool undirected;    // true为无向图，false为有向图
-    void initialize( Heap<heap_edge>* heap);
+    
+    void prim_initialize(bool* Q, int* cost, Heap<heap_edge>* heap);
+    void kruskal_initialize( Heap<heap_edge>* heap);
     void set_distance(int s, int d[], Heap<heap_node>* heap);
     void get_indegree(int count[], int& top);
 
@@ -114,6 +116,7 @@ public:
 
     void show(void(*visit)(int nn));
     void add_edge(int s, int t, int cost);
+    void add_edge(const heap_edge& edge);
     void prim(Graph& mst);
     void kruskal(Graph& mst);
     void dijkstra(int s, int d[], int path[]);
@@ -124,7 +127,17 @@ public:
     int get_cost(int s, int t);
 };
 
-void Graph::initialize (Heap<heap_edge>* heap)
+void Graph::prim_initialize (bool* Q, int* cost, Heap<heap_edge>* heap)
+{
+    for (int i = 0; i < node_number; i++)
+    {
+        Q[i] = false;
+        cost[i] = INF;
+    }
+    heap->push(heap_edge(0, -1, 0));
+}
+
+void Graph::kruskal_initialize (Heap<heap_edge>* heap)
 {
     for (int i = 0; i < edge_number; i++)
     {
@@ -151,7 +164,7 @@ void Graph::set_distance (int s, int d[], Heap<heap_node>* heap)
     
 }
 
-void Graph::get_indegree(int count[], int& top)
+void Graph::get_indegree (int count[], int& top)
 {
     for (int i = 0; i < node_number; i++)
     {
@@ -170,7 +183,7 @@ void Graph::get_indegree(int count[], int& top)
     }
 }
 
-Graph::Graph(int n, int en, bool type=true)
+Graph::Graph (int n, int en, bool type=true)
 {
     if (n > MAX_NODE_NUMBER)
     {
@@ -196,7 +209,7 @@ Graph::Graph(int n, int en, bool type=true)
      
 }
 
-Graph::~Graph()
+Graph::~Graph ()
 {
     delete[] sources;
     delete[] edges;
@@ -206,7 +219,7 @@ Graph::~Graph()
     }
 }
 
-void Graph::show(void(*visit)(int nn))
+void Graph::show (void(*visit)(int nn))
 {
     for (int i = 0; i < edge_number; i++)
     {
@@ -216,8 +229,12 @@ void Graph::show(void(*visit)(int nn))
     }
 }
 
-void Graph::add_edge(int s, int t, int cost=1)
+void Graph::add_edge (int s, int t, int cost=1)
 {
+    if (s < 0 || t < 0)
+    {
+        return;
+    }
     sources[s].add_neighbour(t, cost);
     edges[edge_number++] = heap_edge(cost, s, t);
     // 无向图则每条边有两个方向
@@ -231,10 +248,75 @@ void Graph::add_edge(int s, int t, int cost=1)
     }
 }
 
-void Graph::prim(Graph& mst)
-{}
+void Graph::add_edge (const heap_edge& edge)
+{
+    if (edge.s < 0 || edge.t < 0)
+    {
+        return;
+    }
+    sources[edge.s].add_neighbour(edge.t, edge.cost);
+    edges[edge_number++] = heap_edge(edge.cost, edge.s, edge.t);
+    // 无向图则每条边有两个方向
+    if (undirected)
+    {
+        sources[edge.t].add_neighbour(edge.s, edge.cost);
+    }
+    else
+    {
+        targets[edge.t].add_neighbour(edge.s, edge.cost);
+    }
+}
 
-void Graph::kruskal(Graph& mst)
+void Graph::prim (Graph& mst)
+{
+    if (edge_number < node_number-1)
+    {
+        return;
+    }
+
+    auto Q = new bool[node_number]; // true表示已在mst中
+    auto cost = new int[node_number];   // cost[i]表示结点i到mst中结点边的最小代价
+    auto heap = new Heap<heap_edge>();  // 存放未在mst中的所有结点，按其cost大小组建的堆
+    prim_initialize(Q, cost, heap); // 把结点0放入mst中
+
+    int en = node_number, temp_s;
+    heap_edge next_edge;
+    edge* p;
+    while (en--)
+    {
+        heap->pop(next_edge);
+        if (Q[next_edge.t])
+        {
+            // 形成环，舍弃
+            en++;
+            continue;
+        }
+        
+        Q[next_edge.t] = true;  // 加入mst
+        mst.add_edge(next_edge);
+        // 更新剩下的结点离mst最近的边
+        temp_s = next_edge.t;
+        p = sources[next_edge.t].neighbour;
+        while (p)
+        {
+            if (!Q[p->node] && p->cost < cost[p->node])
+            {
+                // 更新新加入顶点的邻居到mst的最短距离，并入堆
+                next_edge.cost = cost[p->node] = p->cost;
+                next_edge.s = temp_s;
+                next_edge.t = p->node;
+                heap->push(next_edge);
+            }
+            p = p->next;
+        }
+    }
+    
+    delete heap;
+    delete[] cost;
+    delete[] Q;
+}
+
+void Graph::kruskal (Graph& mst)
 {
     if (edge_number < node_number-1)
     {
@@ -243,7 +325,7 @@ void Graph::kruskal(Graph& mst)
     
     heap_edge next_edge;
     auto heap = new Heap<heap_edge>();
-    initialize(heap);  // 初始化堆
+    kruskal_initialize(heap);  // 初始化堆
     disjoint_set* nodes = new disjoint_set(node_number);    // 顶点并查集，已合并的点在一个集合内
     int en = node_number - 1;
     while (en)
@@ -252,7 +334,7 @@ void Graph::kruskal(Graph& mst)
         int s_root = nodes->find(next_edge.s), t_root = nodes->find(next_edge.t);
         if (s_root != t_root)
         {
-            mst.add_edge(next_edge.s, next_edge.t, next_edge.cost);
+            mst.add_edge(next_edge);
             nodes->_union(s_root, t_root);
             en--;
         }
@@ -262,7 +344,7 @@ void Graph::kruskal(Graph& mst)
     delete heap;
 }
 
-int Graph::get_cost(int s, int t)
+int Graph::get_cost (int s, int t)
 {
     if (s == t)
     {
@@ -281,7 +363,7 @@ int Graph::get_cost(int s, int t)
     return INF;
 }
 
-void Graph::dijkstra(int s, int d[], int path[])
+void Graph::dijkstra (int s, int d[], int path[])
 {
     auto heap = new Heap<heap_node>();
     bool computed[node_number];
@@ -326,7 +408,7 @@ void Graph::dijkstra(int s, int d[], int path[])
     delete heap;
 }
 
-void Graph::bellman_ford(int s, int d[], int path[])
+void Graph::bellman_ford (int s, int d[], int path[])
 {
     for (int i = 0; i < node_number; i++)
     {
@@ -376,7 +458,7 @@ void Graph::bellman_ford(int s, int d[], int path[])
     }
 }
 
-void Graph::floyd(int** a, int** path)
+void Graph::floyd (int** a, int** path)
 {
     for (int i = 0; i < node_number; i++)
     {
@@ -417,7 +499,7 @@ void Graph::floyd(int** a, int** path)
 }
 
 // 假设各结点标号顺序即为拓扑顺序
-void Graph::critical_path(int* cp)
+void Graph::critical_path (int* cp)
 {
     int index = 0;
     int *ve = new int[node_number], *vl = new int[node_number];
@@ -477,7 +559,7 @@ void Graph::critical_path(int* cp)
     delete[] vl;
 }
 
-bool Graph::topological_sort(int seq[])
+bool Graph::topological_sort (int seq[])
 {
     if (undirected)
     {

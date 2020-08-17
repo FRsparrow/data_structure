@@ -5,6 +5,7 @@
 * 二叉树相关（用栈前中后序遍历、层次遍历）: binary_tree
 * 堆相关: heap
 * 图相关：graph
+  * 最小生成树(prim, kruskal)
   * 最短路(dijkstra, bellman-ford, floyd)
   * 拓扑排序
   * 关键路径
